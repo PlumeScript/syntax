@@ -37,8 +37,8 @@
     },
     "text": {
       "patterns": [
-        { "match": "(\\\\n|\\\\t|\\\\s)", "name": "string" },
-        { "match": "\\\\.", "name": "string" },
+        { "match": "(\\\\n|\\\\t|\\\\r|\\\\s|\\\\$|\\\\\\(|\\\\:|\\\\,|\\\\\\\\|\\\\/|\\\\0)", "name": "string" },
+        { "match": "\\\\.", "name": "invalid" },
         { "match": "//.*", "name": "comment.plume" },
         { "match": "/\\*", "name": "comment.plume", "push": "comment" },
         { "match": "(\\$)(true|false|empty)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "constant.numeric.plume" } } },

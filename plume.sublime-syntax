@@ -104,11 +104,11 @@ contexts:
       pop: true
 
   text:
-    - match: (\\n|\\t|\\s)
+    - match: (\\n|\\t|\\r|\\s|\\\$|\\\(|\\:|\\,|\\\\|\\/|\\0)
       scope: string
 
     - match: '\\.'
-      scope: string
+      scope: invalid
 
     - match: '//.*'
       scope: comment.plume
