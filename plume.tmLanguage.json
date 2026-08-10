@@ -1,0 +1,216 @@
+{
+  "name": "Plume",
+  "scopeName": "source.plume",
+  "fileTypes": ["plume", "🪶"],
+  "patterns": [
+    { "include": "#command" }
+  ],
+  "repository": {
+    "command": {
+      "patterns": [
+        { "match": "\\s+" },
+        { "match": "\\blet\\b", "name": "storage.declaration.plume", "push": "let_begin", "pop": true },
+        { "match": "\\bset\\b", "name": "storage.declaration.plume", "push": "set_begin", "pop": true },
+        { "match": "\\b(if|elseif|while|for)\\s*\\b", "name": "keyword.operator.plume", "push": "script_if" },
+        { "match": "\\b(else|leave|end|break|continue)\\b", "name": "keyword.operator.plume", "push": "else_end" },
+        { "match": "\\b(run|do|raise|return)\\b", "name": "keyword.operator.plume" },
+        { "match": "\\b(raw)\\b", "name": "keyword.operator.plume", "push": "rawBlock" },
+        { "match": "(\\buse\\b)((\\s+#[^\\s\\(\\)]+)|(\\s+[^\\s\\(\\)]+))?", "captures": { "1": { "name": "keyword.operator.plume" }, "3": { "name": "keyword.operator.plume" } }, "push": "with" },
+        { "match": "(\\bwith\\b)", "name": "keyword.operator.plume", "push": "with" },
+        { "match": "(\\bmacro\\b)(\\s+[a-zA-Z_][a-zA-Z0-9_]*)?\\s*\\(", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "entity.name.function.plume" } }, "push": "macro_def_arg_list" },
+        { "match": "(\\bmacro\\b)(\\s+[a-zA-Z_][a-zA-Z0-9_]*)?", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "entity.name.function.plume" } } },
+        { "match": "\\-", "name": "keyword.operator.plume" },
+        { "match": "(\\.\\.\\.)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "meta.mapping.key.plume" } }, "push": "eval" },
+        { "match": "(meta\\s+|ref\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\\s*(:)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "meta.mapping.key.plume" }, "3": { "name": "keyword.operator.plume" } } },
+        { "match": "(ref)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "meta.mapping.key.plume" } } },
+        { "match": "\\$ ", "name": "keyword.operator.plume", "push": "script" },
+        { "match": "\\(", "push": "macro_call_param_list" },
+        { "match": "(?=.)", "push": "text", "pop": true }
+      ]
+    },
+    "with": {
+      "patterns": [
+        { "match": "([a-zA-Z_][a-zA-Z0-9_]*)(:)\\s*([0-9a-zA-Z]+)", "captures": { "1": { "name": "meta.mapping.key.plume" }, "2": { "name": "punctuation.plume" }, "3": { "name": "storage.declaration.plume" } } },
+        { "match": "\\s*,\\s*", "name": "punctuation.plume" },
+        { "match": "$", "pop": true }
+      ]
+    },
+    "text": {
+      "patterns": [
+        { "match": "(\\\\n|\\\\t|\\\\s)", "name": "string" },
+        { "match": "\\\\.", "name": "string" },
+        { "match": "//.*", "name": "comment.plume" },
+        { "match": "/\\*", "name": "comment.plume", "push": "comment" },
+        { "match": "(\\$)(true|false|empty)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "constant.numeric.plume" } } },
+        { "match": "(\\$)([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "entity.name.function.call.plume" } }, "push": "macro_call_param_list" },
+        { "match": "(\\$)([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "meta.mapping.key.plume" } }, "push": "eval" },
+        { "match": "(\\$)([0-9]+.?[0-9]+)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "constant.numeric.plume" } }, "push": "eval" },
+        { "match": "(\\@)([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "entity.name.function.call.plume" } }, "push": "eval" },
+        { "match": "(\\$)(\\()", "captures": { "1": { "name": "keyword.operator.plume" } }, "push": "eval_script" },
+        { "match": "." },
+        { "match": "$", "push": "command", "pop": true }
+      ]
+    },
+    "comment": {
+      "patterns": [
+        { "match": "\\*/", "name": "comment.plume", "pop": true },
+        { "match": ".", "name": "comment.plume" }
+      ]
+    },
+    "script": {
+      "patterns": [
+        { "match": "$", "pop": true },
+        { "match": "\\s+" },
+        { "match": "\".*?\"", "name": "string" },
+        { "match": "[+\\-*/%<>!=^]+", "name": "keyword.operator.plume" },
+        { "match": "([a-zA-Z_][a-zA-Z0-9_]*)\\(", "captures": { "1": { "name": "entity.name.function.call.plume" } }, "push": "script" },
+        { "match": "([a-zA-Z_][a-zA-Z0-9_]*)(:)", "captures": { "1": { "name": "variable.parameter.function.plume" }, "2": { "name": "keyword.operator.plume" } }, "push": "script" },
+        { "match": "\\b(\\d+(\\.\\d+)?|true|false|empty)\\b", "name": "constant.numeric.plume" },
+        { "match": "\\b(or|and|in|not)\\b", "name": "keyword.operator.plume" },
+        { "match": "\\)", "pop": true },
+        { "match": "\\(", "push": "script" }
+      ]
+    },
+    "eval": {
+      "patterns": [
+        { "match": "\\[", "push": "script_bracket" },
+        { "match": "\\(", "name": "punctuation.plume", "push": "macro_call_param_list" },
+        { "match": "(\\.)([a-zA-Z_][a-zA-Z0-9_]*)(\\??)", "captures": { "1": { "name": "punctuation.plume" }, "2": { "name": "meta.mapping.key.plume" }, "3": { "name": "keyword" } } },
+        { "match": "", "pop": true }
+      ]
+    },
+    "let_begin": {
+      "patterns": [
+        { "match": "\\s" },
+        { "match": "\\b(const|param)\\b", "name": "storage.type.declaration.plume" },
+        { "include": "#let_destructuration" },
+        { "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b", "name": "meta.mapping.key.plume", "push": "let_value", "pop": true }
+      ]
+    },
+    "set_begin": {
+      "patterns": [
+        { "match": "\\s" },
+        { "match": "(?==)", "push": "let_value", "pop": true },
+        { "include": "#let_destructuration" },
+        { "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b\\s*(?=\\[)", "name": "meta.mapping.key.plume", "push": "eval_set" },
+        { "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b", "name": "meta.mapping.key.plume" }
+      ]
+    },
+    "let_destructuration": {
+      "patterns": [
+        { "match": "(\\b[a-zA-Z_][a-zA-Z0-9_]*\\b)\\s+(as)\\s+(\\b[a-zA-Z_][a-zA-Z0-9_]*\\b)", "captures": { "1": { "name": "meta.mapping.key.plume" }, "2": { "name": "keyword.operator.plume" }, "3": { "name": "meta.mapping.key.plume" } } },
+        { "match": ":", "push": "text" },
+        { "match": "(?=from)", "push": "let_value", "pop": true }
+      ]
+    },
+    "let_value": {
+      "patterns": [
+        { "match": "s*(,)\\s*\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b", "captures": { "1": { "name": "punctuation.plume" }, "2": { "name": "meta.mapping.key.plume" } } },
+        { "match": "\\s+(as)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "meta.mapping.key.plume" } } },
+        { "match": "(\\+|\\*|\\/|\\-)?=", "name": "keyword.operator.plume", "push": "command", "pop": true },
+        { "match": "\\bfrom\\b\\s*", "name": "keyword.operator.plume", "push": "command", "pop": true },
+        { "match": "$", "push": "text", "pop": true },
+        { "match": ":", "push": "text_from" },
+        { "match": "\\S", "name": "invalid" }
+      ]
+    },
+    "macro_def_arg_list": {
+      "patterns": [
+        { "match": "([a-zA-Z_][a-zA-Z0-9_]*\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)(:)", "captures": { "1": { "name": "storage.declaration.plume" }, "2": { "name": "variable.parameter.function.plume" }, "3": { "name": "keyword.operator.plume" } }, "push": "param_value" },
+        { "match": "([a-zA-Z_][a-zA-Z0-9_]*\\s+)?(\\.\\.\\.)([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "storage.declaration.plume" }, "2": { "name": "keyword.operator.plume" }, "3": { "name": "variable.parameter.function.plume" } }, "push": "new_parameter_or_end" },
+        { "match": "(\\?)([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "variable.parameter.function.plume" } }, "push": "new_parameter_or_end" },
+        { "match": "([a-zA-Z_][a-zA-Z0-9_]*\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "storage.declaration.plume" }, "2": { "name": "variable.parameter.function.plume" } }, "push": "new_parameter_or_end" },
+        { "match": "\\s" },
+        { "match": "\\)", "name": "punctuation.plume", "pop": true },
+        { "match": ".", "name": "invalid" }
+      ]
+    },
+    "macro_call_param_list": {
+      "patterns": [
+        { "match": "([a-zA-Z_][a-zA-Z0-9_]*)(:)", "captures": { "1": { "name": "variable.parameter.function.plume" }, "2": { "name": "keyword.operator.plume" } }, "push": "param_value" },
+        { "match": "(\\.\\.\\.)([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "variable.parameter.function.plume" } }, "push": "new_parameter_or_end_eval" },
+        { "match": "(\\?)([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "variable.parameter.function.plume" } }, "push": "new_parameter_or_end" },
+        { "match": "\\s" },
+        { "match": "\\)", "name": "punctuation.plume", "pop": true },
+        { "match": "", "name": "variable.parameter.function.plume", "push": "param_value" }
+      ]
+    },
+    "rawBlock": {
+      "patterns": [
+        { "match": "end", "name": "keyword.operator.plume", "pop": true }
+      ]
+    },
+    "new_parameter_or_end": {
+      "patterns": [
+        { "match": ",", "name": "punctuation.plume", "pop": true },
+        { "match": "(?=\\))", "pop": true },
+        { "match": "\\s" },
+        { "match": ".", "name": "invalid" }
+      ]
+    },
+    "else_end": {
+      "patterns": [
+        { "match": ".", "name": "invalid" },
+        { "match": "", "pop": true }
+      ]
+    },
+    "script_if": {
+      "patterns": [
+        { "match": "$", "pop": true },
+        { "include": "#script" }
+      ]
+    },
+    "script_bracket": {
+      "patterns": [
+        { "match": "(\\])(\\??)", "captures": { "1": { "name": "punctuation.parenthesis.end.plume" }, "2": { "name": "keyword" } }, "pop": true },
+        { "include": "#script" }
+      ]
+    },
+    "eval_set": {
+      "patterns": [
+        { "match": ",", "push": "set_begin", "pop": true },
+        { "include": "#eval" }
+      ]
+    },
+    "text_from": {
+      "patterns": [
+        { "match": "(?=from)", "pop": true },
+        { "match": "(?=,)", "push": "let_value", "pop": true },
+        { "include": "#text" }
+      ]
+    },
+    "new_parameter_or_end_param": {
+      "patterns": [
+        { "match": "(?=(\\)|,))", "pop": true },
+        { "include": "#new_parameter_or_end" }
+      ]
+    },
+    "text_param": {
+      "patterns": [
+        { "match": "(?=(\\)|,))", "pop": true },
+        { "include": "#text" }
+      ]
+    },
+    "eval_script": {
+      "patterns": [
+        { "match": "$", "push": "eval", "pop": true },
+        { "match": "\\)", "push": "eval", "pop": true },
+        { "include": "#script" }
+      ]
+    },
+    "param_value": {
+      "patterns": [
+        { "match": "(?=(\\)|,))", "push": "new_parameter_or_end_param", "pop": true },
+        { "include": "#text" }
+      ]
+    },
+    "new_parameter_or_end_eval": {
+      "patterns": [
+        { "match": "\\[", "push": "script_bracket" },
+        { "match": "\\(", "name": "punctuation.plume", "push": "macro_call_param_list" },
+        { "match": "(\\.)([a-zA-Z_][a-zA-Z0-9_]*)(\\??)", "captures": { "1": { "name": "punctuation.plume" }, "2": { "name": "meta.mapping.key.plume" }, "3": { "name": "keyword" } } },
+        { "match": "", "push": "new_parameter_or_end", "pop": true }
+      ]
+    }
+  }
+}

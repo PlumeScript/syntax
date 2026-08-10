@@ -1,0 +1,447 @@
+%YAML 1.2
+---
+name: Plume
+file_extensions: [plume, 🪶]
+scope: source.plume
+
+contexts:
+  main:
+    - include: command
+  command:
+    - match: \s+
+
+    - match: \blet\b
+      scope: storage.declaration.plume
+      push: let_begin
+      pop: true
+
+    - match: \bset\b
+      scope: storage.declaration.plume
+      push: set_begin
+      pop: true
+
+    - match: \b(if|elseif|while|for)\s*\b
+      scope: keyword.operator.plume
+      push: script_if
+
+    - match: \b(else|leave|end|break|continue)\b
+      scope: keyword.operator.plume
+      push:
+        - match: '.'
+          scope: invalid
+        - match: ''
+          pop: true
+
+    - match: \b(run|do|raise|return)\b
+      scope: keyword.operator.plume
+
+    - match: \b(raw)\b
+      scope: keyword.operator.plume
+      push: rawBlock
+
+    - match: (\buse\b)((\s+#[^\s\(\)]+)|(\s+[^\s\(\)]+))?
+      captures:
+        1: keyword.operator.plume
+        3: keyword.operator.plume
+      push: with
+
+
+    - match: (\bwith\b)
+      scope: keyword.operator.plume
+      push: with
+
+    - match: (\bmacro\b)(\s+[a-zA-Z_][a-zA-Z0-9_]*)?\s*\(
+      captures:
+        1: keyword.operator.plume
+        2: entity.name.function.plume
+      push: macro_def_arg_list
+
+    - match: (\bmacro\b)(\s+[a-zA-Z_][a-zA-Z0-9_]*)?
+      captures:
+        1: keyword.operator.plume
+        2: entity.name.function.plume
+    
+    - match: '\-'
+      scope: keyword.operator.plume
+
+    - match: (\.\.\.)
+      captures:
+        1: keyword.operator.plume
+        2: meta.mapping.key.plume
+      push: eval
+
+    - match: '(meta\s+|ref\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\s*(:)'
+      captures:
+        1: keyword.operator.plume
+        2: meta.mapping.key.plume
+        3: keyword.operator.plume
+
+    - match: '(ref)\s+([a-zA-Z_][a-zA-Z0-9_]*)'
+      captures:
+        1: keyword.operator.plume
+        2: meta.mapping.key.plume
+    
+    - match: '\$ '
+      scope: keyword.operator.plume
+      push: script
+
+    - match: '\('
+      push: macro_call_param_list
+
+    - match: '(?=.)'
+      push: text
+      pop: true
+
+  with:
+    - match: '([a-zA-Z_][a-zA-Z0-9_]*)(:)\s*([0-9a-zA-Z]+)'
+      captures:
+        1: meta.mapping.key.plume
+        2: punctuation.plume
+        3: storage.declaration.plume
+    - match: '\s*,\s*'
+      scope: punctuation.plume
+    - match: "$"
+      pop: true
+
+  text:
+    - match: (\\n|\\t|\\s)
+      scope: string
+
+    - match: '\\.'
+      scope: string
+
+    - match: '//.*'
+      scope: comment.plume
+
+    - match: /\*
+      scope: comment.plume
+      push: comment
+
+    - match: '(\$)(true|false|empty)'
+      captures:
+        1: keyword.operator.plume
+        2: constant.numeric.plume
+
+    - match: '(\$)([a-zA-Z_][a-zA-Z0-9_]*)\s*\('
+      captures:
+        1: keyword.operator.plume
+        2: entity.name.function.call.plume
+      push: macro_call_param_list
+
+    - match: '(\$)([a-zA-Z_][a-zA-Z0-9_]*)'
+      captures:
+        1: keyword.operator.plume
+        2: meta.mapping.key.plume
+      push: eval
+
+    - match: '(\$)([0-9]+.?[0-9]+)'
+      captures:
+        1: keyword.operator.plume
+        2: constant.numeric.plume
+      push: eval
+
+    - match: '(\@)([a-zA-Z_][a-zA-Z0-9_]*)'
+      captures:
+        1: keyword.operator.plume
+        2: entity.name.function.call.plume
+      push: eval
+
+    - match: '(\$)(\()'
+      captures:
+        1: keyword.operator.plume
+        # 2: markup.raw.plume
+      push: eval_script
+
+    - match: "."
+      # scope: string
+
+    - match: '$'
+      push: command
+      pop: true
+
+  comment:
+    - match: \*/
+      scope: comment.plume
+      pop: true
+    - match: .
+      scope: comment.plume
+
+  script:
+    - match: '$'
+      pop: true
+
+    - match: \s+
+
+    - match: '".*?"'
+      scope: string
+    
+    - match: '[+\-*/%<>!=^]+'
+      scope: keyword.operator.plume
+
+    - match: '([a-zA-Z_][a-zA-Z0-9_]*)\('
+      captures:
+        1: entity.name.function.call.plume
+      push: script
+
+    - match: '([a-zA-Z_][a-zA-Z0-9_]*)(:)'
+      captures:
+        1: variable.parameter.function.plume
+        2: keyword.operator.plume
+      push: script
+
+    - match: \b(\d+(\.\d+)?|true|false|empty)\b
+      scope: constant.numeric.plume
+
+    - match: '\b(or|and|in|not)\b'
+      scope: keyword.operator.plume
+
+    - match: '\)'
+      # scope: markup.raw.plume
+      pop: true
+    - match: '\('
+      push: script
+
+    
+  eval:
+    - match: '\['
+      push: script_bracket
+
+    - match: '\('
+      scope: punctuation.plume
+      push: macro_call_param_list
+
+    - match: '(\.)([a-zA-Z_][a-zA-Z0-9_]*)(\??)'
+      captures:
+        1: punctuation.plume
+        2: meta.mapping.key.plume
+        3: keyword
+
+    - match: ''
+      pop: true
+
+
+  # Commandes
+  let_begin:
+    - match: '\s'
+
+    - match: '\b(const|param)\b'
+      scope: storage.type.declaration.plume
+
+    - include: let_destructuration
+
+    - match: \b[a-zA-Z_][a-zA-Z0-9_]*\b
+      scope: meta.mapping.key.plume
+      push: let_value
+      pop: true
+
+  set_begin:
+    - match: '\s'
+
+    - match: '(?==)'
+      push: let_value
+      pop: true
+    
+    - include: let_destructuration
+    - match: \b[a-zA-Z_][a-zA-Z0-9_]*\b\s*(?=\[)
+      scope: meta.mapping.key.plume
+      push: eval_set
+    - match: \b[a-zA-Z_][a-zA-Z0-9_]*\b
+      scope: meta.mapping.key.plume
+
+  let_destructuration:
+    - match: (\b[a-zA-Z_][a-zA-Z0-9_]*\b)\s+(as)\s+(\b[a-zA-Z_][a-zA-Z0-9_]*\b)
+      captures:
+        1: meta.mapping.key.plume
+        2: keyword.operator.plume
+        3: meta.mapping.key.plume
+    - match: ':'
+      push: text
+    - match: '(?=from)'
+      push: let_value
+      pop: true
+
+
+  let_value:
+    - match: s*(,)\s*\b([a-zA-Z_][a-zA-Z0-9_]*)\b
+      captures:
+        1: punctuation.plume
+        2: meta.mapping.key.plume
+
+    - match: \s+(as)\s+([a-zA-Z_][a-zA-Z0-9_]*)
+      captures:
+        1: keyword.operator.plume
+        2: meta.mapping.key.plume
+
+    - match: '(\+|\*|\/|\-)?='
+      scope: keyword.operator.plume
+      push: command
+      pop: true
+
+    - match: \bfrom\b\s*
+      scope: keyword.operator.plume
+      push: command
+      pop: true
+
+    - match: '$'
+      push: text
+      pop: true
+
+    - match: ':'
+      push: text_from
+
+    - match: '\S'
+      scope: invalid
+
+
+
+  macro_def_arg_list:
+    - match: '([a-zA-Z_][a-zA-Z0-9_]*\s+)?([a-zA-Z_][a-zA-Z0-9_]*)(:)'
+      captures:
+        1: storage.declaration.plume
+        2: variable.parameter.function.plume
+        3: keyword.operator.plume
+      push: param_value
+
+    - match: '([a-zA-Z_][a-zA-Z0-9_]*\s+)?(\.\.\.)([a-zA-Z_][a-zA-Z0-9_]*)'
+      captures:
+        1: storage.declaration.plume
+        2: keyword.operator.plume
+        3: variable.parameter.function.plume
+      push: new_parameter_or_end
+
+    - match: '(\?)([a-zA-Z_][a-zA-Z0-9_]*)'
+      captures:
+        1: keyword.operator.plume
+        2: variable.parameter.function.plume
+      push: new_parameter_or_end
+
+    - match: '([a-zA-Z_][a-zA-Z0-9_]*\s+)?([a-zA-Z_][a-zA-Z0-9_]*)'
+      captures:
+        1: storage.declaration.plume
+        2: variable.parameter.function.plume
+      push: new_parameter_or_end
+
+    - match: '\s'
+
+    - match: '\)'
+      scope: punctuation.plume
+      pop: true
+
+    - match: '.'
+      scope: invalid
+
+  macro_call_param_list:
+    - match: '([a-zA-Z_][a-zA-Z0-9_]*)(:)'
+      captures:
+        1: variable.parameter.function.plume
+        2: keyword.operator.plume
+      push: param_value
+
+    - match: '(\.\.\.)([a-zA-Z_][a-zA-Z0-9_]*)'
+      captures:
+        1: keyword.operator.plume
+        2: variable.parameter.function.plume
+      push: new_parameter_or_end_eval
+    - match: '(\?)([a-zA-Z_][a-zA-Z0-9_]*)'
+      captures:
+        1: keyword.operator.plume
+        2: variable.parameter.function.plume
+      push: new_parameter_or_end
+
+    - match: '\s'
+
+    - match: '\)'
+      scope: punctuation.plume
+      pop: true
+
+    - match: ''
+      scope: variable.parameter.function.plume
+      push: param_value
+
+  rawBlock:
+    - match: 'end'
+      scope: keyword.operator.plume
+      pop: true    
+
+  new_parameter_or_end:
+
+    - match: ','
+      scope: punctuation.plume
+      pop: true
+
+    - match: '(?=\))'
+      pop: true
+
+    - match: '\s'
+
+    - match: '.'
+      scope: invalid
+
+  # Wrappers (ex-with_prototype) — patterns du prototype + include du contexte de base
+  script_if:
+    - match: '$'
+      pop: true
+    - include: script
+
+  script_bracket:
+    - match: '(\])(\??)'
+      captures:
+        1: punctuation.parenthesis.end.plume
+        2: keyword
+      pop: true
+    - include: script
+
+  eval_set:
+    - match: ','
+      push: set_begin
+      pop: true
+    - include: eval
+
+  text_from:
+    - match: '(?=from)'
+      pop: true
+    - match: '(?=,)'
+      push: let_value
+      pop: true
+    - include: text
+
+  new_parameter_or_end_param:
+    - match: '(?=(\)|,))'
+      pop: true
+    - include: new_parameter_or_end
+
+  text_param:
+    - match: '(?=(\)|,))'
+      pop: true
+    - include: text
+
+  # Contextes combinés (ex-push: [a, b]) — le DERNIER de la liste est actif (dessus de pile)
+  eval_script:
+    - match: '$'
+      push: eval
+      pop: true
+    - match: '\)'
+      push: eval
+      pop: true
+    - include: script
+
+  param_value:
+    - match: '(?=(\)|,))'
+      push: new_parameter_or_end_param
+      pop: true
+    - include: text
+
+  new_parameter_or_end_eval:
+    - match: '\['
+      push: script_bracket
+    - match: '\('
+      scope: punctuation.plume
+      push: macro_call_param_list
+    - match: '(\.)([a-zA-Z_][a-zA-Z0-9_]*)(\??)'
+      captures:
+        1: punctuation.plume
+        2: meta.mapping.key.plume
+        3: keyword
+    - match: ''
+      push: new_parameter_or_end
+      pop: true
