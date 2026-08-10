@@ -25,7 +25,15 @@
         { "match": "(ref)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "meta.mapping.key.plume" } } },
         { "match": "\\$ ", "name": "keyword.operator.plume", "push": "script" },
         { "match": "\\(", "push": "macro_call_param_list" },
-        { "match": "(?=.)", "push": "text", "pop": true }
+        { "match": "//.*", "name": "comment.plume" },
+        { "match": "/\\*", "name": "comment.plume", "push": "comment" },
+        { "match": "(\\$)(true|false|empty)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "constant.numeric.plume" } } },
+        { "match": "(\\$)([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "entity.name.function.call.plume" } }, "push": "macro_call_param_list" },
+        { "match": "(\\$)([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "meta.mapping.key.plume" } }, "push": "eval" },
+        { "match": "(\\$)([0-9]+.?[0-9]+)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "constant.numeric.plume" } }, "push": "eval" },
+        { "match": "(\\@)([a-zA-Z_][a-zA-Z0-9_]*)", "captures": { "1": { "name": "keyword.operator.plume" }, "2": { "name": "entity.name.function.call.plume" } }, "push": "eval" },
+        { "match": "(\\$)(\\()", "captures": { "1": { "name": "keyword.operator.plume" } }, "push": "eval_script" },
+        { "match": ".", "push": "text" }
       ]
     },
     "with": {
