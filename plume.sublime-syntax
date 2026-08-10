@@ -323,6 +323,9 @@ contexts:
 
     - match: '\s'
 
+    - match: ','
+      scope: punctuation.plume
+
     - match: '\)'
       scope: punctuation.plume
       pop: true
